@@ -29,29 +29,23 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         try {
+            Map<String, Object> response = new HashMap<>();
 
             if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-                return ResponseEntity.badRequest().body("Email already registered");
+                response.put("message", "Email already registered");
+                return ResponseEntity.badRequest().body(response);
             }
 
-            // ✅ Ensure required fields
-            if (user.getName() == null || user.getEmail() == null || user.getPassword() == null) {
-                return ResponseEntity.badRequest().body("Missing required fields");
-            }
-
-            // ✅ Set role (important)
             user.setRole("USER");
-
-            // ✅ Encode password
             user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-            // 🔥 SAVE (this is where crash happens)
             userRepository.save(user);
 
-            return ResponseEntity.ok("User registered successfully");
+            response.put("message", "User registered successfully");
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            e.printStackTrace();   // 🔥 VERY IMPORTANT
+            e.printStackTrace();   // 🔥 THIS IS KEY
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
