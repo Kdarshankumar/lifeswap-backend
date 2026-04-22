@@ -34,7 +34,7 @@ public class AuthController {
             response.put("message", "Email already registered");
             return ResponseEntity.badRequest().body(response);
         }
-
+        user.setRole("USER");
         // Hash the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
