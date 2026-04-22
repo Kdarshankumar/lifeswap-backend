@@ -27,21 +27,33 @@ public class AuthController {
 
     // Register endpoint
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<?> register(@RequestBody User user) {
+        try {
 
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            response.put("message", "Email already registered");
-            return ResponseEntity.badRequest().body(response);
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest().body("Email already registered");
+            }
+
+            // ✅ Ensure required fields
+            if (user.getName() == null || user.getEmail() == null || user.getPassword() == null) {
+                return ResponseEntity.badRequest().body("Missing required fields");
+            }
+
+            // ✅ Set role (important)
+            user.setRole("USER");
+
+            // ✅ Encode password
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+            // 🔥 SAVE (this is where crash happens)
+            userRepository.save(user);
+
+            return ResponseEntity.ok("User registered successfully");
+
+        } catch (Exception e) {
+            e.printStackTrace();   // 🔥 VERY IMPORTANT
+            return ResponseEntity.status(500).body(e.getMessage());
         }
-        user.setRole("USER");
-        // Hash the password before saving
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-
-        response.put("message", "User registered successfully");
-        response.put("user", user);
-        return ResponseEntity.ok(response);
     }
 
     // Login endpoint
